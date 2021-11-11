@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  type: ExternalName
+  externalName: ivs-backend-assessment-db.c7kqtfebrhih.ap-southeast-1.rds.amazonaws.com

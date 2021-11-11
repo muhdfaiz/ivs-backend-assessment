@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ivs-backend-assessment
+  labels:
+    app: ivs-backend-assessment
+    tier: backend
+spec:
+  selector:
+    matchLabels:
+      app: ivs-backend-assessment
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ivs-backend-assessment
+    spec:
+      containers:
+        - name: app
+          image: 294459726178.dkr.ecr.ap-southeast-1.amazonaws.com/ivs-backend-assessment:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: app-persistent-storage
+              mountPath: /data
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "cp -r . /data"]
+        - name: nginx
+          image: nginx:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          #          readinessProbe:
+          #            httpGet:
+          #              path: /login
+          #              port: 80
+          #            initialDelaySeconds: 2
+          #            periodSeconds: 2
+          volumeMounts:
+            - name: app-persistent-storage
+              mountPath: /var/www/html
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+
+      volumes:
+        - name: app-persistent-storage
+          persistentVolumeClaim:
+            claimName: app-volume
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+            items:
+              - key: default.conf
+                path: default.conf
